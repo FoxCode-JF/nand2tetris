@@ -1,0 +1,9 @@
+#folders to ignore
+tools/*
+
+#ignore all .pdf
+*.pdf
+#ignore all .zip
+*.zip
+
+*.OUT
