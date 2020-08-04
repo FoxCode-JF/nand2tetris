@@ -1,15 +1,15 @@
 // This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
+// and the book "The Elements of ComputiALUOutNeg Systems"
 // by Nisan and Schocken, MIT Press.
 // File name: projects/05/CPU.hdl
 
 /**
- * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * The Hack CPU (Central ProcessiALUOutNeg unit), consistiALUOutNeg of an ALU,
  * two registers named A and D, and a program counter named PC.
  * The CPU is designed to fetch and execute instructions written in 
- * the Hack machine language. In particular, functions as follows:
- * Executes the inputted instruction according to the Hack machine 
- * language specification. The D and A in the language specification
+ * the Hack machine laALUOutNeguage. In particular, functions as follows:
+ * Executes the inputted instruction accordiALUOutNeg to the Hack machine 
+ * laALUOutNeguage specification. The D and A in the laALUOutNeguage specification
  * refer to CPU-resident registers, while M refers to the external
  * memory location addressed by A, i.e. to Memory[A]. The inM input 
  * holds the value of this location. If the current instruction needs 
@@ -22,7 +22,7 @@
  * are affected by the execution of the current instruction, they commit 
  * to their new values only in the next time step. If reset==1 then the 
  * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
- * than to the address resulting from executing the current instruction. 
+ * than to the address resultiALUOutNeg from executiALUOutNeg the current instruction. 
  */
 
 CHIP CPU {
@@ -30,7 +30,7 @@ CHIP CPU {
     IN  inM[16],         // M value input  (M = contents of RAM[A])
         instruction[16], // Instruction for execution
         reset;           // Signals whether to re-start the current
-                         // program (reset==1) or continue executing
+                         // program (reset==1) or continue executiALUOutNeg
                          // the current program (reset==0).
 
     OUT outM[16],        // M value output
@@ -39,5 +39,93 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+	/**	A - instruction (0vvv vvvv vvvv vvvv)
+	* 		v - value 0 or 1 (address)
+	*
+	*	C - instruction (1xxa cccc ccdd djjj)
+	*		x - not used
+	*		a - A register or M input
+	*		c - control bits of ALU, choose arithmetic operation
+	*		d - destination, choose to which registers (M, A, D) resulting value will go
+	*		j - controls branching (jumps)
+	*/	
+	
+	
+	Mux16(a=instruction, b=ALUOut, sel=instruction[15], out=AOrCInstr);
+	
+	//A or C-instruction load to A register
+	Not(in=instruction[15], out=AInstruction);
+	And(a=instruction[15], b=instruction[5], out=loadARegCinstr);
+	Or(a=loadARegCinstr, b=AInstruction, out=loadAReg);
+	ARegister(in=AOrCInstr, load=loadAReg, out=ARegOut);
+	
+	//C-instruction load to D register
+	And(a=instruction[15], b=instruction[4], out=loadDReg);
+	DRegister(in=ALUOut, load=loadDReg, out=DRegOut);
+	
+	
+	Mux16(a=ARegOut, b=inM, sel=instruction[12], out=ARegOrInM);
+	
+		ALU(	x=DRegOut, y=ARegOrInM, 
+				zx=instruction[11],
+				nx=instruction[10], 
+				zy=instruction[9], 
+				ny=instruction[8], 
+				f=instruction[7], 
+				no=instruction[6], 
+				out=ALUOut,
+				zr=ALUOutZero,
+				ng=ALUOutNeg	);
+	
+	/**	Program counter
+	*	If j1j2j3 	==	000 then PC++ (no jump)
+	*	 		j1 	==	1	then jump if out >	0
+	*			j2	==	1 	then jump if out ==	0
+	*			j3	==	1 	then jump if out <	0
+	*/
+	
+		
+	// Write to memory outside CPU
+    Or16(a=false, b=ARegOut, out[0..14]=addressM);
+    Or16(a=false, b=ALUOut, out=outM);
+    And(a=instruction[15], b=instruction[3], out=writeM);
+	
+	Or(a=instruction[0], b=instruction[1], out=j1OrJ2);
+	Or(a=j1OrJ2, b=instruction[2], out=jmp);
+	
+	//	ALU flags
+	Not(in=ALUOutZero, out=notALUOutZero);
+	Not(in=ALUOutNeg, out=notALUOutNeg);
+	
+	// ALUout > 0
+	And(a=notALUOutNeg, b=notALUOutZero, out=notZeroOrNeg);
+	And(a=notZeroOrNeg, b=instruction[0], out=JGT);
+	
+	// ALUout < 0
+	And(a=ALUOutNeg, b=instruction[2], out=JLT);
+	
+	// ALUout != 0
+	And(a=instruction[0], b=instruction[2], out=NEInstr);
+	And(a=NEInstr, b=notALUOutZero, out=JNE);
+	
+	// ALUout = 0
+	And(a=instruction[1], b=ALUOutZero, out=JEQ);
+	
+	// ALUout <= 0
+	Or(a=ALUOutZero, b=ALUOutNeg, out=LECond);
+	And(a=instruction[2], b=instruction[1], out=LEInstr);
+	And(a=LECond, b=LEInstr, out=JLE);
+	
+	// ALUout >= 0
+	Or(a=ALUOutZero, b=notALUOutNeg, out=GECond);
+	And(a=instruction[0], b=instruction[1], out=GEInstr);
+	And(a=GECond, b=GEInstr, out=JGE);
+	
+	Or8Way(in[0]=JGT, in[1]=JLE, in[2]=JEQ, in[3]=JGE, in[4]=JLT, in[5]=JNE, out=jmpCond);
+			
+	And(a=jmp, b=jmpCond, out=jmpCondMet);
+	And(a=jmpCondMet, b=instruction[15], out=PCload);
+	Not(in=PCload, out=PCinc);
+	
+	PC(in=ARegOut, inc=PCinc, load=PCload, reset=reset, out[0..14]=pc);
 }
