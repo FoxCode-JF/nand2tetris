@@ -6,10 +6,25 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
+#include "Parser.h"
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <iterator>
+
+
 using namespace std;
 
 int main() {
-	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
+
+	Parser p("../MemoryAccess/BasicTest/BasicTest.vm");
+
+	while(p.hasMoreCommands())
+	{
+		p.advance();
+		p.commandType();
+		p.arg1();
+		p.arg2();
+	}
 	return 0;
 }
