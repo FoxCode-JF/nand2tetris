@@ -31,6 +31,7 @@ private:
 	std::string currentFileName;
 	static std::unordered_map<std::string, std::string> s_directMemorySegments;
 	static std::unordered_map<cmdType, std::string> s_commandName;
+	static unsigned int s_labelIndex;
 };
 
 #endif /* CODEWRITER_H_ */

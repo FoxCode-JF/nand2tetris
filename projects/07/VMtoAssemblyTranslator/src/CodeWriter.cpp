@@ -36,6 +36,8 @@ std::unordered_map<cmdType, std::string> CodeWriter::s_commandName {
 std::unordered_map<std::string, std::string> CodeWriter::s_directMemorySegments {
 		{"local", "LCL"}, {"argument", "ARG"}, {"this", "THIS"}, {"that", "THAT"}};
 
+unsigned int CodeWriter::s_labelIndex = 0;
+
 void CodeWriter::setFileName(std::string fileName)
 {
 	if(outFile.is_open())	outFile.close();
@@ -86,7 +88,7 @@ void CodeWriter::writeArithmetic(std::string command)
 						<< "A=M-1"	<< std::endl
 						<< "A=A-1"	<< std::endl
 						<< "M=0"	<< std::endl	// D = false
-						<< "(IS_EQ)"<< std::endl
+						<< "(IS_EQ"	<< s_labelIndex << ")"<< std::endl
 						<< "@SP" 	<< std::endl
 						<< "A=M-1"	<< std::endl
 						<< "A=A-1"	<< std::endl
@@ -101,7 +103,7 @@ void CodeWriter::writeArithmetic(std::string command)
 						<< "A=M-1"	<< std::endl
 						<< "A=A-1"	<< std::endl
 						<< "M=0"	<< std::endl	// D = false
-						<< "(IS_GREATER)"<< std::endl
+						<< "(IS_GREATER" << s_labelIndex << ")" << std::endl
 						<< "@SP" 	<< std::endl
 						<< "A=M-1"	<< std::endl
 						<< "A=A-1"	<< std::endl
@@ -115,7 +117,7 @@ void CodeWriter::writeArithmetic(std::string command)
 						<< "A=M-1"	<< std::endl
 						<< "A=A-1"	<< std::endl
 						<< "M=0"	<< std::endl	// D = false
-						<< "(IS_LOWER)"<< std::endl
+						<< "(IS_LOWER" << s_labelIndex << ")" << std::endl
 						<< "@SP" 	<< std::endl
 						<< "A=M-1"	<< std::endl
 						<< "A=A-1"	<< std::endl
@@ -131,6 +133,9 @@ void CodeWriter::writeArithmetic(std::string command)
 //	Decrement Stack Pointer
 	this->outFile << "@SP" 		<< std::endl;
 	this->outFile << "M=M-1" 	<< std::endl;
+
+//	Increment label index
+	s_labelIndex++;
 }
 void CodeWriter::writePushPop(cmdType command, std::string segment, int index)
 {

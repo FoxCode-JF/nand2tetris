@@ -18,9 +18,24 @@ using namespace std;
 
 int main(int argc, char **argv) {
 
-	Parser p("../StackArithmetic/StackTest/StackTest.vm");
-	CodeWriter a("StackTest");
+//		../StackArithmetic/StackTest/StackTest.vm
+	  if (argc != 2)
+	  {
+		  std::cerr << "Usage: " << argv[0] << " <file or directory>" << std::endl;
+	      return 1;
+	  }
+	string fileName = argv[1];
+	Parser p(fileName);
+	cout << "Input file: " << fileName << endl;
 
+	std::size_t found = fileName.find(".vm");
+	if (found!=std::string::npos)
+	{
+		fileName.erase(fileName.begin()+found, fileName.end());
+	}
+
+	CodeWriter a(fileName);
+	cout << "Output file: " << fileName << endl;
 
 	while(p.hasMoreCommands())
 	{
