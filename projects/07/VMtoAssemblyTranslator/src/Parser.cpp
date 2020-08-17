@@ -10,6 +10,7 @@
   * 	Close file in destructor
   * 	check if file is open if not cerr
   * 	check if there are redundant includes
+  * 	Add exception handling
   */
 
 #include "Parser.h"
@@ -20,7 +21,7 @@
 Parser::Parser(std::string fileName)
 {
 	this->file.open(fileName);
-	this->currentCmdType=NO_COMMAND;
+	this->currentCmdType=cmdType::NO_COMMAND;
 	this->currentCmdLen = 0;
 }
 Parser::~Parser() {};
@@ -33,13 +34,13 @@ bool Parser::hasMoreCommands()
 		return false;
 }
 
-std::unordered_map<std::string, cmdType> Parser::command {
-		{"add", C_ARITHMETIC}, 	{"sub", C_ARITHMETIC}, 	{"neg", C_ARITHMETIC},
-		{"lt", C_ARITHMETIC}, 	{"gt", C_ARITHMETIC}, 	{"eq", C_ARITHMETIC},
-		{"and", C_ARITHMETIC}, 	{"or", C_ARITHMETIC}, 	{"not", C_ARITHMETIC},
-		{"label", C_LABEL},		{"goto", C_GOTO}, 		{"if-goto", C_IF},
-		{"push", C_PUSH}, 		{"pop", C_POP},
-		{"call", C_CALL}, 		{"return", C_RETURN}, 	{"function", C_FUNCTION}
+std::unordered_map<std::string, cmdType> Parser::s_command {
+		{"add", cmdType::C_ARITHMETIC}, 	{"sub", cmdType::C_ARITHMETIC},	{"neg", cmdType::C_ARITHMETIC},
+		{"lt", cmdType::C_ARITHMETIC}, 		{"gt", cmdType::C_ARITHMETIC}, 	{"eq", cmdType::C_ARITHMETIC},
+		{"and", cmdType::C_ARITHMETIC}, 	{"or", cmdType::C_ARITHMETIC}, 	{"not", cmdType::C_ARITHMETIC},
+		{"label", cmdType::C_LABEL},		{"goto", cmdType::C_GOTO}, 		{"if-goto", cmdType::C_IF},
+		{"push", cmdType::C_PUSH}, 			{"pop", cmdType::C_POP},
+		{"call", cmdType::C_CALL}, 			{"return", cmdType::C_RETURN}, 	{"function", cmdType::C_FUNCTION}
 	};
 
 /**
@@ -57,7 +58,6 @@ void Parser::advance()
 			break;
 		}
 	}
-	std::cout << this->currentCommand <<  " :: ";
 }
 
 /**
@@ -70,11 +70,9 @@ void Parser::advance()
 cmdType Parser::commandType()
 {
 	std::istringstream ss(this->currentCommand);
-	std::string cmd;
+	ss >> this->arg0;
 
-	ss >> cmd;
-	std::cout << cmd;
-	return command[cmd];
+	return s_command[this->arg0];
 }
 
 std::string Parser::arg1()
@@ -82,13 +80,12 @@ std::string Parser::arg1()
 	std::istringstream ss(this->currentCommand);
 	std::string arg1;
 
-	if(this->countWordsInString(this->currentCommand) == 2)
+	if(this->countWordsInString(this->currentCommand) >= 2)
 	{
 		for (int i = 0; i < 2; ++i)
 		{
 			ss >> arg1;
 		}
-		std::cout << " :: " << arg1;
 		return arg1;
 	}else
 		return "";
@@ -105,12 +102,17 @@ int Parser::arg2()
 		{
 			ss >> arg2str;
 		}
-		std::cout << " :: " << std::stoi(arg2str) << std::endl;
 		return std::stoi(arg2str);
 	} else
 		return 0;
 }
 
+std::string Parser::getArg0()
+{
+	std::string tmp = this->arg0;
+	this->arg0.erase();
+	return tmp;
+}
 unsigned int Parser::countWordsInString(std::string const& str)
 {
     std::stringstream stream(str);

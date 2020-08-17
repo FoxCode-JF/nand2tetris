@@ -5,6 +5,11 @@
  *      Author: FoxCode
  */
 
+/**
+ *  TODO:
+ *		Add comments to functios and class
+ */
+
 #ifndef PARSER_H_
 #define PARSER_H_
 
@@ -22,17 +27,19 @@ public:
 	bool hasMoreCommands();
 	cmdType commandType();
 	void advance();
+	std::string getArg0();
 	std::string arg1();
 	int arg2();
 
 private:
 	std::ifstream file;
 	std::string currentCommand;
-	cmdType currentCmdType=NO_COMMAND;
+	std::string arg0;
+	cmdType currentCmdType;
 	int currentCmdLen;
 	unsigned int countWordsInString(std::string const& str);
 
-	static std::unordered_map<std::string, cmdType> command;
+	static std::unordered_map<std::string, cmdType> s_command;
 };
 
 #endif /* PARSER_H_ */

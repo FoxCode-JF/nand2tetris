@@ -3,10 +3,11 @@
 // Author      : FoxCode
 // Version     :
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description : Hello World in C++
 //============================================================================
 
 #include "Parser.h"
+#include "CodeWriter.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -15,16 +16,20 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char **argv) {
 
-	Parser p("../MemoryAccess/BasicTest/BasicTest.vm");
+	Parser p("../StackArithmetic/StackTest/StackTest.vm");
+	CodeWriter a("StackTest");
+
 
 	while(p.hasMoreCommands())
 	{
 		p.advance();
-		p.commandType();
-		p.arg1();
-		p.arg2();
+		if(p.commandType() == cmdType::NO_COMMAND) continue;
+		else if(p.commandType() == cmdType::C_ARITHMETIC)
+			a.writeArithmetic(p.getArg0());
+		else
+			a.writePushPop(p.commandType(), p.arg1(), p.arg2());
 	}
 	return 0;
 }

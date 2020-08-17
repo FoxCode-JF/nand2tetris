@@ -8,7 +8,7 @@
 #ifndef VMCOMMANDS_H_
 #define VMCOMMANDS_H_
 
-enum cmdType
+enum class cmdType
 {
 	NO_COMMAND,
 	//PART I
