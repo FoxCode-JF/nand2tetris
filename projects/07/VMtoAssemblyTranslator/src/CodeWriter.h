@@ -32,6 +32,11 @@ private:
 	static std::unordered_map<std::string, std::string> s_directMemorySegments;
 	static std::unordered_map<cmdType, std::string> s_commandName;
 	static unsigned int s_labelIndex;
+
+	void writeLine(std::string line);
+	void writePush(std::string segment, int index);
+	void writePop(std::string segment, int index);
+	std::string segmentToAsm(std::string segment, int index);
 };
 
 #endif /* CODEWRITER_H_ */

@@ -7,7 +7,6 @@
 
  /**
   * TODO:
-  * 	Close file in destructor
   * 	check if file is open if not cerr
   * 	check if there are redundant includes
   * 	Add exception handling
@@ -24,7 +23,10 @@ Parser::Parser(std::string fileName)
 	this->currentCmdType=cmdType::NO_COMMAND;
 	this->currentCmdLen = 0;
 }
-Parser::~Parser() {};
+Parser::~Parser()
+{
+	this->file.close();
+};
 
 bool Parser::hasMoreCommands()
 {

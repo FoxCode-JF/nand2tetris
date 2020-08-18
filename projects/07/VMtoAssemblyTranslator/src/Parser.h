@@ -7,7 +7,7 @@
 
 /**
  *  TODO:
- *		Add comments to functios and class
+ *		Add comments to functions and class
  */
 
 #ifndef PARSER_H_
