@@ -5,5 +5,8 @@ tools/*
 *.pdf
 #ignore all .zip
 *.zip
+#ignore all .hack
+*.zip
+
 
 *.OUT

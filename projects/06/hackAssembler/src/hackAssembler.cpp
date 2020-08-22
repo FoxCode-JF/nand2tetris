@@ -6,28 +6,90 @@
 // Description : Assembler created for Hack Computer Architecture
 //============================================================================
 
-#include <iostream>
 #include "Parser.h"
+#include "Code.h"
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
-int main() {
-	//std::string str="../max/MaxL.asm";
-	//std::ifstream c(str);
+int main(int argc, char **argv) {
 
-	Parser a("../max/Max.asm");
-	//cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
-	int i = 0;
+	uint16_t StackPointer = 16;
+	uint16_t ROMaddr = 0;
+
+	if (argc > 2)
+	{
+		 std::cerr << "Usage: " << argv[0] << " " << argv[1] << ", <file or directory>" << std::endl;
+		 return 1;
+	}
+
+	string 	inputPath = argv[1];
+	string 	outPath = "";
+
+	cout << "Input file: " << inputPath << endl;
+
+
+	size_t found = inputPath.find(".asm");
+	if (found!=std::string::npos)
+	{
+		outPath = inputPath.substr(0, found) + ".hack";
+	}
+
+	cout << "Output file: " << outPath << ".hack"<< endl;
+
+	Parser 	a(inputPath);
+	Code 	b;
+
+	ofstream outFile(outPath);
+
+/**		FIRST PASS
+* 			Fill Symbol table
+*/
+	std::string mySymbol = "";
+	cmdType myCmdType;
+
 	while(a.hasMoreCommands())
 	{
-		std::cout << ++i;
 		a.advance();
 		a.commandType();
-		cout << "symbol: " << a.symbol() << endl;
-		cout << "dest: " << a.dest() << endl;
-		cout << "comp: " << a.comp() << endl;
-		cout << "dest: " << a.jump() << endl;
+		myCmdType = a.commandType();
+		mySymbol = a.symbol();
 
+		if(myCmdType == L_COMMAND)	b.hackTab.addEntry(mySymbol, ROMaddr);
+		else if(myCmdType != NO_COMMAND) ROMaddr++;
+	}
+
+/**		SECOND PASS
+ * 			Translation
+ */
+	a.rewindFile();
+
+	while(a.hasMoreCommands())
+	{
+		a.advance();
+		myCmdType = a.commandType();
+
+
+		if(myCmdType == NO_COMMAND) continue;
+		else if(myCmdType == A_COMMAND)
+		{
+			mySymbol = a.symbol();
+			if(!isdigit(mySymbol[0]) && !b.hackTab.Contains(mySymbol))
+			{
+				b.hackTab.addEntry(mySymbol, StackPointer);
+				StackPointer++;
+			}
+			outFile << b.symbolBits(mySymbol) << endl;
+		}
+		else if(a.commandType() == C_COMMAND)
+		{
+			string c=a.comp();
+			string d=a.dest();
+			string j=a.jump();
+
+			outFile << "111" << b.comp(c) << b.dest(d) << b.jump(j) << endl;
+		}
 	}
 	return 0;
 }

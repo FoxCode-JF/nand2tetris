@@ -21,22 +21,25 @@ enum cmdType
 
 class Parser
 {
-private:
-	std::ifstream asmFile;
-	std::string currentCommand;
-	cmdType currentCmdType;
-	int currentCmdLen;
 public:
 	Parser(std::string asmFileName);
 	virtual ~Parser();
 
 	bool hasMoreCommands();
 	void advance();
-	void commandType();
+	cmdType commandType();
 	std::string symbol();
 	std::string dest();
 	std::string comp();
 	std::string jump();
+	void rewindFile();
+
+private:
+	std::ifstream asmFile;
+	std::string currentCommand;
+	cmdType currentCmdType;
+	int currentCmdLen;
+
 };
 
 #endif /* PARSER_H_ */

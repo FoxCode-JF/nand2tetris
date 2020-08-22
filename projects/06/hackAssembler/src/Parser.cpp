@@ -7,6 +7,7 @@
 
 #include "Parser.h"
 #include <algorithm>
+#include <cstdio>
 
 Parser::Parser(std::string asmFileName)
 {
@@ -14,7 +15,9 @@ Parser::Parser(std::string asmFileName)
 	this->currentCmdType=NO_COMMAND;
 	this->currentCmdLen=0;
 }
-Parser::~Parser() {};
+Parser::~Parser() {
+	asmFile.close();
+};
 
 bool Parser::hasMoreCommands()
 {
@@ -30,6 +33,7 @@ void Parser::advance()
 {
 	std::getline(this->asmFile, this->currentCommand);
 	this->currentCmdLen=this->currentCommand.length();
+
 	for (int i = 0; i < this->currentCmdLen - 2; i++)
 	{
 		if(!this->currentCommand.empty() && this->currentCommand[i] == '/' && this->currentCommand[i+1]=='/')
@@ -43,29 +47,30 @@ void Parser::advance()
 												::isspace),
 												this->currentCommand.end());
 
-}
-void Parser::commandType()
-{
+//	Determine current command type
 	if(this->currentCommand.empty())
-	{
-		this->currentCmdType=NO_COMMAND;
-	}
-	else if(this->currentCommand[0] == '@')
-	{
-		this->currentCmdType=A_COMMAND;
-		std::cout << "\tA\t" << "cmd: " << this->currentCommand[0] << "\n";
-	}
-	else if(this->currentCommand[0] == '(')
-	{
-		this->currentCmdType=L_COMMAND;
-		std::cout << "\tL\t" << "cmd: " << this->currentCommand[0] << "\n";
-	}
-	else
-	{
-		this->currentCmdType=C_COMMAND;
-		std::cout << "\tC\t" << "cmd: " << this->currentCommand << "\n";
-	}
+		{
+			this->currentCmdType=NO_COMMAND;
+		}
+		else if(this->currentCommand.find("@") == 0)
+		{
+			this->currentCmdType=A_COMMAND;
+		}
+		else if(this->currentCommand.find("(") == 0)
+		{
+			this->currentCmdType=L_COMMAND;
+		}
+		else
+		{
+			this->currentCmdType=C_COMMAND;
+		}
 }
+
+cmdType Parser::commandType()
+{
+	return this->currentCmdType;
+}
+
 std::string Parser::symbol()
 {
 	if(this->currentCmdType == A_COMMAND)
@@ -101,20 +106,31 @@ std::string Parser::comp()
 			{
 				return this->currentCommand.substr(semiColInd, eqInd);
 			}
-			else return "";
+			else if(eqInd != std::string::npos)
+			{
+				return this->currentCommand.substr(eqInd + 1, this->currentCommand.length() - 1);
+			}
+			else
+				return this->currentCommand.substr(0, semiColInd);
 		}
-		else return "";
+		return "";
 }
 std::string Parser::jump()
 {
 	if(this->currentCmdType == C_COMMAND)
-		{
+	{
 			size_t semiColInd = this->currentCommand.find(";");
-			if(semiColInd != std::string::npos)
-			{
-				return this->currentCommand.substr(semiColInd + 1);
-			}
-			else return "";
+		if(semiColInd != std::string::npos)
+		{
+			return this->currentCommand.substr(semiColInd + 1);
 		}
+			else return "";
+	}
 		else return "";
+}
+
+void Parser::rewindFile()
+{
+	this->asmFile.clear();
+	this->asmFile.seekg(0);
 }
