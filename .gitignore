@@ -6,7 +6,7 @@ tools/*
 #ignore all .zip
 *.zip
 #ignore all .hack
-*.zip
+*.hack
 
 
 *.OUT
