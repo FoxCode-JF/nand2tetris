@@ -38,7 +38,10 @@ public:
 private:
 	std::ofstream outFile;
 	std::string currentFileName;
+	std::string currentInputFileName;
 	unsigned int labelIndex;
+	unsigned int callIndex;
+	unsigned int staticIndex;
 	static std::unordered_map<std::string, std::string> s_directMemorySegments;
 	static std::unordered_map<cmdType, std::string> s_commandName;
 

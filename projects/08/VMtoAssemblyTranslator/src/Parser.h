@@ -2,7 +2,6 @@
  * Parser.h
  *
  *  Created on: 15 sie 2020
- *      Author: FoxCode
  */
 
 /**

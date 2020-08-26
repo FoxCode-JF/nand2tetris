@@ -3,27 +3,23 @@
 // Author      : FoxCode
 // Version     :
 // Copyright   : Your copyright notice
-// Description : Hello World in C++
+// Description : VM to assembly translator
 //============================================================================
 
 
-/**
- * TODO:
- * 		Allow translation of all files in a directory
- */
+
 
 #include "Parser.h"
 #include "CodeWriter.h"
+#include <dirent.h>		// used instead of <filesystem> because course grader is not compatible with c++17
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <iterator>
-#include <filesystem>
+//#include <filesystem>
 
-
-
-namespace fs = std::filesystem;
+//namespace fs = std::filesystem;
 
 using namespace std;
 
@@ -38,7 +34,64 @@ int main(int argc, char **argv) {
 		 return 1;
 	}
 
-	fs::path path(argv[1]);
+	string path(argv[1]);
+	string outFileName;
+
+	DIR *dir;
+	struct dirent *ent;
+
+	Parser *myParser;
+	CodeWriter *myWriter;
+
+	size_t foundExtension = path.find(".vm");
+	if(foundExtension!=std::string::npos)
+	{
+		myParser = new Parser(path);
+		outFileName = makeOutFileName(path);
+		myWriter = new CodeWriter(outFileName);
+		translator(*myParser, *myWriter);
+	}
+	else
+	{
+//		add "/" at the end of directory if it is not there
+		if(path[path.length()-1] != '/')
+		{
+			path.push_back('/');
+		}
+		outFileName = makeOutFileName(path);
+		myWriter = new CodeWriter(outFileName);
+		myWriter->writeInit();
+
+		if ((dir = opendir (path.c_str())) != NULL)
+		{
+			/* print all the files and directories within directory */
+			while ((ent = readdir(dir)) != NULL)
+			{
+				string inFileName = ent->d_name;
+				size_t found = inFileName.find(".vm");
+
+				if(found!=std::string::npos)
+				{
+					//cout << inFileName << endl;
+					myWriter->setFileName(inFileName);
+					cout << path + inFileName << endl;
+					myParser = new Parser(path + inFileName);
+					translator(*myParser, *myWriter);
+				}
+			}
+			closedir(dir);
+		} else
+		{
+			/* could not open directory */
+			perror ("");
+			return EXIT_FAILURE;
+		}
+	}
+
+/**
+ * Using c++17 <filesystem>
+ */
+/*	fs::path path(argv[1]);
 
 	Parser *myParser;
 	CodeWriter *myWriter;
@@ -51,7 +104,7 @@ int main(int argc, char **argv) {
 		myParser = new Parser(strPath);
 		outFileName = makeOutFileName(strPath);
 		myWriter = new CodeWriter(outFileName);
-
+		myWriter->writeInit();
 		translator(*myParser, *myWriter);
 	}
 	else if(fs::is_directory(path))
@@ -62,7 +115,8 @@ int main(int argc, char **argv) {
 			strPath.push_back('/');
 		}
 		outFileName = makeOutFileName((strPath));
-		myWriter = new CodeWriter();
+		myWriter = new CodeWriter(outFileName);
+		myWriter->writeInit();
 		for(const auto& it : fs::directory_iterator(path))
 		{
 			std::string s(fs::absolute( it.path()).string());
@@ -70,15 +124,18 @@ int main(int argc, char **argv) {
 			size_t found = s.find(".vm");
 			if( it.is_regular_file() && found!=std::string::npos)
 			{
+				cout << s << endl;
+				myWriter->setFileName(s);
 				myParser = new Parser(s);
-				myWriter->setFileName(outFileName);
 				translator(*myParser, *myWriter);
 			}
-			//if(myParser != nullptr) delete myParser;
+//			if(myParser != nullptr) delete myParser;
 		}
 	}
+***********************************************************/
+
 	if(myParser != nullptr) delete myParser;
-	delete myWriter;
+	if(myWriter != nullptr) delete myWriter;
 
 	return 0;
 }
@@ -89,19 +146,17 @@ std::string  makeOutFileName(std::string name)
 	size_t found = name.find(".vm");
 	if (found!=std::string::npos)
 	{
-		return name.substr(found, name.length()-1);
-		cout << "Out Name: " << name << endl;
+		return name.substr(0, found);
 	}
 	else
 	{
 		std::string s = name.substr(0, name.length()-1);
-		found = s.find_last_of("/");
+		found = s.find_last_of("/\\");
 		if(found!=std::string::npos)
 		{
-			return name + s.substr(found, s.length()-1);
+			return name + s.substr(found + 1, s.length()-1);
 		}
 	}
-//	TODO Add exception
 	return "";
 }
 
